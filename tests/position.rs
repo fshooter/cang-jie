@@ -8,6 +8,7 @@ use tantivy::{
     query::QueryParser,
     schema::{IndexRecordOption, SchemaBuilder, TextFieldIndexing, TextOptions},
     Index, SnippetGenerator,
+    tokenizer::{Tokenizer, TokenStream, Token},
 };
 
 #[test]
@@ -52,4 +53,48 @@ fn tokenizer() -> CangJieTokenizer {
         worker: Arc::new(Jieba::new()),
         option: TokenizerOption::All,
     }
+}
+
+#[test]
+fn tokenize时返回的position应该是实际的字节偏移() {
+    let mut tokenizer = CangJieTokenizer {
+        worker: Arc::new(Jieba::new()), // default dictionary
+        option: TokenizerOption::ForSearch { hmm: false },
+    };
+
+    let mut token_stream = tokenizer.token_stream("中华人民共和国");
+    let mut tokens = vec![];
+    while token_stream.advance() {
+        let token = token_stream.token();
+        tokens.push(token.clone());
+    }
+    assert_eq!(tokens.len(), 6);
+    assert_eq!(tokens[0], Token {
+        position: 0,
+        offset_from: 0,
+        offset_to: 6,
+        text: "中华".to_string(),
+        position_length: 6,
+    });
+    assert_eq!(tokens[1], Token {
+        position: 3,
+        offset_from: 3,
+        offset_to: 9,
+        text: "华人".to_string(),
+        position_length: 6,
+    });
+    assert_eq!(tokens[2], Token {
+        position: 6,
+        offset_from: 6,
+        offset_to: 12,
+        text: "人民".to_string(),
+        position_length: 6,
+    });
+    assert_eq!(tokens[3], Token {
+        position: 12,
+        offset_from: 12,
+        offset_to: 18,
+        text: "共和".to_string(),
+        position_length: 6,
+    });
 }

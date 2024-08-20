@@ -30,9 +30,9 @@ impl<'a> ::tantivy::tokenizer::TokenStream for CangjieTokenStream<'a> {
             self.token = Token {
                 offset_from,
                 offset_to,
-                position: self.index,
+                position: offset_from,
                 text: current_word.to_string(),
-                position_length: 1,
+                position_length: current_word.len(),
             };
 
             self.index += 1;
